@@ -1,12 +1,12 @@
-&lt;?xml version="1.0" encoding="utf-8"?&gt;
-&lt;menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"&gt;
-    &lt;item
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
         android:id="@+id/share_logs"
         android:title="@string/share_logs"
-        app:showAsAction="never" /&gt;
-    &lt;item
+        app:showAsAction="never" />
+    <item
         android:id="@+id/clear_logs"
         android:title="@string/clear_logs"
-        app:showAsAction="never" /&gt;
-&lt;/menu&gt;
+        app:showAsAction="never" />
+</menu>
