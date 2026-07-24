@@ -89,6 +89,12 @@
             android:label="@string/hidden_icons"
             android:parentActivityName=".activities.SettingsActivity" />
 
+        <activity
+            android:name=".activities.LogViewerActivity"
+            android:exported="false"
+            android:label="@string/app_logs"
+            android:parentActivityName=".activities.SettingsActivity" />
+
         <activity-alias
             android:name=".activities.SplashActivity.Red"
             android:clearTaskOnLaunch="true"
