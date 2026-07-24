@@ -132,10 +132,12 @@ class MainActivity : SimpleActivity(), FlingListener {
         private const val ANIMATION_DURATION = 150L
         private const val APP_DRAWER_CLOSE_DELAY = 300L
         private const val APP_DRAWER_STATE = "app_drawer_state"
+        private var isCrashHandlerInstalled = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         useDynamicTheme = false
+        installCrashHandlerIfNeeded()
 
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -1368,5 +1370,19 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         return Color.rgb(red / n, green / n, blue / n)
+    }
+
+    private fun installCrashHandlerIfNeeded() {
+        if (isCrashHandlerInstalled) {
+            return
+        }
+        isCrashHandlerInstalled = true
+
+        val logKeeper = org.fossify.home.helpers.LogKeeperHelper(applicationContext)
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            logKeeper.logCrash(throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
     }
 }
