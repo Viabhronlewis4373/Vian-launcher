@@ -57,6 +57,7 @@ class SettingsActivity : SimpleActivity() {
         setupShowHomeAppLabels()
         setupLanguage()
         setupManageHiddenIcons()
+        setupViewAppLogs()
         updateTextColors(binding.settingsHolder)
 
         arrayOf(
@@ -269,6 +270,12 @@ class SettingsActivity : SimpleActivity() {
     private fun setupManageHiddenIcons() {
         binding.settingsManageHiddenIconsHolder.setOnClickListener {
             startActivity(Intent(this, HiddenIconsActivity::class.java))
+        }
+    }
+
+    private fun setupViewAppLogs() {
+        binding.settingsViewAppLogsHolder.setOnClickListener {
+            startActivity(Intent(this, LogViewerActivity::class.java))
         }
     }
 
