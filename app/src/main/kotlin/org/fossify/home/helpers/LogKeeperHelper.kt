@@ -1,6 +1,7 @@
 package org.fossify.home.helpers
 
 import android.content.Context
+import org.fossify.home.extensions.config
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -10,6 +11,11 @@ import java.util.Locale
  * Lightweight in-app logger. Writes timestamped entries to a rotating file in
  * app-private storage, so on-device issues (crashes, silently-caught errors)
  * can be inspected and exported without ADB/root access.
+ *
+ * Gated by the Log Keeper master switch (Config.logKeeperEnabled) — when off,
+ * log() and logCrash() are no-ops app-wide. Designed to be reused by future
+ * components (sidebar, net speed, call recorder, etc.) as they're added, so
+ * they all respect the same on/off switch and write to the same file.
  */
 class LogKeeperHelper(context: Context) {
     private val appContext = context.applicationContext
@@ -17,7 +23,10 @@ class LogKeeperHelper(context: Context) {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
 
     @Synchronized
-    fun log(tag: String, message: String, throwable: Throwable? = null) {
+    fun log(tag: String, message: String, throwable: Throwable? = null, forceLog: Boolean = false) {
+        if (!forceLog && !appContext.config.logKeeperEnabled) {
+            return
+        }
         try {
             rotateIfNeeded()
             val timestamp = dateFormat.format(Date())
@@ -33,7 +42,10 @@ class LogKeeperHelper(context: Context) {
     }
 
     fun logCrash(throwable: Throwable) {
-        log(tag = "CRASH", message = throwable.message ?: "Uncaught exception", throwable = throwable)
+        // Crashes are always logged regardless of the master switch — a crash
+        // is exactly the moment you most need the record, and the switch is
+        // meant to control routine tracing noise, not this.
+        log(tag = "CRASH", message = throwable.message ?: "Uncaught exception", throwable = throwable, forceLog = true)
     }
 
     @Synchronized
