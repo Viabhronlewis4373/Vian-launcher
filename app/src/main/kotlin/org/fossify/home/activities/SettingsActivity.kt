@@ -281,9 +281,12 @@ class SettingsActivity : SimpleActivity() {
         // pipeline can be verified without waiting for a real bug. Debug/testing
         // aid only — safe to remove once the log keeper is trusted.
         binding.settingsViewAppLogsHolder.setOnLongClickListener {
-            throw RuntimeException("Test crash triggered from Settings (long press on View app logs)")
+            throw TestCrashException("Test crash triggered from Settings (long press on View app logs)")
         }
     }
+
+    /** Thrown only by the deliberate test-crash trigger above, to exercise the log keeper's crash handler on demand. */
+    private class TestCrashException(message: String) : Exception(message)
 
     private fun launchAbout() {
         val licenses = 0L
