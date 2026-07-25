@@ -126,6 +126,7 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     private lateinit var mDetector: GestureDetectorCompat
     private val binding by viewBinding(ActivityMainBinding::inflate)
+    private val logKeeper by lazy { org.fossify.home.helpers.LogKeeperHelper(applicationContext) }
 
     companion object {
         private var mLastUpEvent = 0L
@@ -279,7 +280,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     if (!showIcon) {
                         try {
                             launchersDB.deleteById(it.id!!)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            logKeeper.log("MainActivity", "Failed to delete hidden launcher id=${it.id}", e)
                         }
                     }
                     showIcon
@@ -302,7 +304,8 @@ class MainActivity : SimpleActivity(), FlingListener {
         super.onStop()
         try {
             binding.homeScreenGrid.root.appWidgetHost.stopListening()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "appWidgetHost.stopListening() failed in onStop", e)
         }
 
         wasJustPaused = false
@@ -396,7 +399,8 @@ class MainActivity : SimpleActivity(), FlingListener {
 
         try {
             mDetector.onTouchEvent(event)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "GestureDetector.onTouchEvent failed", e)
         }
 
         when (event.actionMasked) {
@@ -549,7 +553,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                 try {
                     item.accept()
                     binding.homeScreenGrid.root.storeAndShowGridItem(gridItem)
-                } catch (_: IllegalStateException) {
+                } catch (e: IllegalStateException) {
+                    logKeeper.log("MainActivity", "Pin shortcut request accept() failed", e)
                 }
             }
         }
@@ -1057,7 +1062,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                 Class.forName("android.app.StatusBarManager")
                     .getMethod("expandNotificationsPanel")
                     .invoke(getSystemService("statusbar"))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logKeeper.log("MainActivity", "expandNotificationsPanel reflection call failed", e)
             }
         }
     }
@@ -1160,7 +1166,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     )
                 homeScreenGridItems.add(dialerIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "Default dialer icon detection failed", e)
         }
 
         try {
@@ -1187,7 +1194,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     )
                 homeScreenGridItems.add(messengerIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "Default SMS messenger icon detection failed", e)
         }
 
         try {
@@ -1217,7 +1225,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     )
                 homeScreenGridItems.add(browserIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "Default browser icon detection failed", e)
         }
 
         try {
@@ -1250,7 +1259,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     homeScreenGridItems.add(storeIcon)
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "Default app store icon detection failed", e)
         }
 
         try {
@@ -1280,7 +1290,8 @@ class MainActivity : SimpleActivity(), FlingListener {
                     )
                 homeScreenGridItems.add(cameraIcon)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logKeeper.log("MainActivity", "Default camera icon detection failed", e)
         }
 
         homeScreenGridItemsDB.insertAll(homeScreenGridItems)
@@ -1378,7 +1389,6 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
         isCrashHandlerInstalled = true
 
-        val logKeeper = org.fossify.home.helpers.LogKeeperHelper(applicationContext)
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             logKeeper.logCrash(throwable)
