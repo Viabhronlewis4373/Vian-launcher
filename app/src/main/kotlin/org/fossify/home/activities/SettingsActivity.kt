@@ -277,6 +277,12 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsViewAppLogsHolder.setOnClickListener {
             startActivity(Intent(this, LogViewerActivity::class.java))
         }
+        // Long press triggers a deliberate test crash, so the crash-logging
+        // pipeline can be verified without waiting for a real bug. Debug/testing
+        // aid only — safe to remove once the log keeper is trusted.
+        binding.settingsViewAppLogsHolder.setOnLongClickListener {
+            throw RuntimeException("Test crash triggered from Settings (long press on View app logs)")
+        }
     }
 
     private fun launchAbout() {
