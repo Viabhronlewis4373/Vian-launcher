@@ -79,6 +79,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     constructor(context: Context, attrs: AttributeSet) : this(context, attrs, 0)
 
     private lateinit var binding: HomeScreenGridBinding
+    private val logKeeperHelper by lazy { org.fossify.home.helpers.LogKeeperHelper(context.applicationContext) }
     private var columnCount = context.config.homeColumnCount
     private var rowCount = context.config.homeRowCount
     private var pageIndicatorsYPos = 0
@@ -238,18 +239,24 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             val providers = appWidgetManager.installedProviders
             gridItems = context.homeScreenGridItemsDB.getAllItems() as ArrayList<HomeScreenGridItem>
             gridItems.toImmutableList().forEach { item ->
-                if (item.type == ITEM_TYPE_ICON) {
-                    item.drawable = context.getDrawableForPackageName(item.packageName)
-                } else if (item.type == ITEM_TYPE_FOLDER) {
-                    item.drawable = item.toFolder().generateDrawable()
-                } else if (item.type == ITEM_TYPE_SHORTCUT) {
-                    if (item.icon != null) {
-                        item.drawable = item.icon?.toDrawable(context.resources)
-                    } else {
-                        ensureBackgroundThread {
-                            context.homeScreenGridItemsDB.deleteById(item.id!!)
+                try {
+                    if (item.type == ITEM_TYPE_ICON) {
+                        item.drawable = context.getDrawableForPackageName(item.packageName)
+                    } else if (item.type == ITEM_TYPE_FOLDER) {
+                        item.drawable = item.toFolder().generateDrawable()
+                    } else if (item.type == ITEM_TYPE_SHORTCUT) {
+                        if (item.icon != null) {
+                            item.drawable = item.icon?.toDrawable(context.resources)
+                        } else {
+                            ensureBackgroundThread {
+                                context.homeScreenGridItemsDB.deleteById(item.id!!)
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    // One malformed item (e.g. a corrupt folder) must not prevent
+                    // the rest of the grid from loading.
+                    logKeeperHelper.log("HomeScreenGrid", "Drawable generation failed for item.id=${item.id}, type=${item.type}", e)
                 }
 
                 item.providerInfo =
@@ -620,21 +627,25 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                     docked = yIndex == rowCount - 1
 
                     ensureBackgroundThread {
-                        context.homeScreenGridItemsDB.updateItemPosition(
-                            left = left,
-                            top = top,
-                            right = right,
-                            bottom = bottom,
-                            page = page,
-                            docked = docked,
-                            parentId = parentId,
-                            id = id!!
-                        )
+                        try {
+                            context.homeScreenGridItemsDB.updateItemPosition(
+                                left = left,
+                                top = top,
+                                right = right,
+                                bottom = bottom,
+                                page = page,
+                                docked = docked,
+                                parentId = parentId,
+                                id = id!!
+                            )
 
-                        if (page != oldPage && oldPage != 0) {
-                            if (gridItems.none { it.page == oldPage && it.parentId == null }) {
-                                deletePage(oldPage)
+                            if (page != oldPage && oldPage != 0) {
+                                if (gridItems.none { it.page == oldPage && it.parentId == null }) {
+                                    deletePage(oldPage)
+                                }
                             }
+                        } catch (e: Exception) {
+                            logKeeperHelper.log("HomeScreenGrid", "moveItem: updateItemPosition failed for id=$id", e)
                         }
                     }
                 }
@@ -843,55 +854,63 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 }
 
                 ensureBackgroundThread {
-                    context.homeScreenGridItemsDB.updateItemPosition(
-                        left = left,
-                        top = top,
-                        right = right,
-                        bottom = bottom,
-                        page = page,
-                        docked = docked,
-                        parentId = newParentId,
-                        id = id!!
-                    )
-                    if (deleteOldParent && oldParentId != null) {
-                        context.homeScreenGridItemsDB.deleteById(oldParentId)
-                    } else if (
-                        oldParentId != null
-                        && gridItems.none { it.parentId == oldParentId && it.left == oldLeft }
-                    ) {
-                        gridItems
-                            .filter {
-                                it.parentId == oldParentId && it.left > oldLeft && it.id != id
-                            }
-                            .forEach {
-                                it.left -= 1
-                            }
-                        context.homeScreenGridItemsDB.shiftFolderItems(oldParentId, oldLeft, -1, id)
-                    }
-
-                    if (
-                        newParentId != null
-                        && gridItems.any { it.parentId == newParentId && it.left == left }
-                        && (newParentId != oldParentId || left != oldLeft)
-                    ) {
-                        gridItems
-                            .filter { it.parentId == newParentId && it.left >= left && it.id != id }
-                            .forEach {
-                                it.left += 1
-                            }
-
-                        context.homeScreenGridItemsDB.shiftFolderItems(
-                            folderId = newParentId,
-                            shiftFrom = left - 1,
-                            shiftBy = +1,
-                            excludingId = id
+                    try {
+                        context.homeScreenGridItemsDB.updateItemPosition(
+                            left = left,
+                            top = top,
+                            right = right,
+                            bottom = bottom,
+                            page = page,
+                            docked = docked,
+                            parentId = newParentId,
+                            id = id!!
                         )
-                    }
-
-                    if (page != oldPage && oldPage != 0) {
-                        if (gridItems.none { it.page == oldPage && it.parentId == null }) {
-                            deletePage(oldPage)
+                        if (deleteOldParent && oldParentId != null) {
+                            context.homeScreenGridItemsDB.deleteById(oldParentId)
+                        } else if (
+                            oldParentId != null
+                            && gridItems.none { it.parentId == oldParentId && it.left == oldLeft }
+                        ) {
+                            gridItems
+                                .filter {
+                                    it.parentId == oldParentId && it.left > oldLeft && it.id != id
+                                }
+                                .forEach {
+                                    it.left -= 1
+                                }
+                            context.homeScreenGridItemsDB.shiftFolderItems(oldParentId, oldLeft, -1, id)
                         }
+
+                        if (
+                            newParentId != null
+                            && gridItems.any { it.parentId == newParentId && it.left == left }
+                            && (newParentId != oldParentId || left != oldLeft)
+                        ) {
+                            gridItems
+                                .filter { it.parentId == newParentId && it.left >= left && it.id != id }
+                                .forEach {
+                                    it.left += 1
+                                }
+
+                            context.homeScreenGridItemsDB.shiftFolderItems(
+                                folderId = newParentId,
+                                shiftFrom = left - 1,
+                                shiftBy = +1,
+                                excludingId = id
+                            )
+                        }
+
+                        if (page != oldPage && oldPage != 0) {
+                            if (gridItems.none { it.page == oldPage && it.parentId == null }) {
+                                deletePage(oldPage)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        logKeeperHelper.log(
+                            "HomeScreenGrid",
+                            "addAppIconOrShortcut: folder/position DB update failed for id=$id, oldParentId=$oldParentId, newParentId=$newParentId",
+                            e
+                        )
                     }
                 }
             }
@@ -1090,9 +1109,20 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             ?: appWidgetManager!!.installedProviders
                 .firstOrNull { it.provider.className == item.className }
         if (appWidgetProviderInfo != null) {
-            item.widgetId = appWidgetHost.allocateAppWidgetId()
+            try {
+                item.widgetId = appWidgetHost.allocateAppWidgetId()
+            } catch (e: Exception) {
+                logKeeperHelper.log("HomeScreenGrid", "allocateAppWidgetId failed for item.id=${item.id}", e)
+                removeItemFromHomeScreen(item)
+                return
+            }
+
             ensureBackgroundThread {
-                context.homeScreenGridItemsDB.updateWidgetId(item.widgetId, item.id!!)
+                try {
+                    context.homeScreenGridItemsDB.updateWidgetId(item.widgetId, item.id!!)
+                } catch (e: Exception) {
+                    logKeeperHelper.log("HomeScreenGrid", "updateWidgetId DB write failed for item.id=${item.id}", e)
+                }
             }
 
             activity.handleWidgetBinding(
@@ -1130,14 +1160,29 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         appWidgetProviderInfo: AppWidgetProviderInfo,
         item: HomeScreenGridItem,
     ) {
-        // we have to pass the base context here, else there will be errors with the themes
-        val widgetView = appWidgetHost.createView(
-            (context as MainActivity).baseContext,
-            item.widgetId,
-            appWidgetProviderInfo
-        ) as MyAppWidgetHostView
-        widgetView.tag = item.widgetId
-        widgetView.setAppWidget(item.widgetId, appWidgetProviderInfo)
+        val widgetView: MyAppWidgetHostView
+        try {
+            // we have to pass the base context here, else there will be errors with the themes
+            widgetView = appWidgetHost.createView(
+                (context as MainActivity).baseContext,
+                item.widgetId,
+                appWidgetProviderInfo
+            ) as MyAppWidgetHostView
+            widgetView.tag = item.widgetId
+            widgetView.setAppWidget(item.widgetId, appWidgetProviderInfo)
+        } catch (e: Exception) {
+            // A misbehaving third-party widget provider can throw here and would
+            // otherwise take down the whole home screen. Log it and drop the
+            // widget from the grid instead of crashing.
+            logKeeperHelper.log(
+                "HomeScreenGrid",
+                "placeAppWidget failed for widgetId=${item.widgetId}, provider=${appWidgetProviderInfo.provider}",
+                e
+            )
+            removeItemFromHomeScreen(item)
+            return
+        }
+
         widgetView.longPressListener = { x, y ->
             val activity = context as? MainActivity
             if (activity?.isAllAppsFragmentExpanded() == false) {
@@ -1177,17 +1222,23 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         val widgetDpWidth = (widgetWidth / density).toInt()
         val widgetDpHeight = (widgetHeight / density).toInt()
 
-        if (isSPlus()) {
-            val sizes = listOf(SizeF(widgetDpWidth.toFloat(), widgetDpHeight.toFloat()))
-            widgetView.updateAppWidgetSize(Bundle(), sizes)
-        } else {
-            widgetView.updateAppWidgetSize(
-                Bundle(),
-                widgetDpWidth,
-                widgetDpHeight,
-                widgetDpWidth,
-                widgetDpHeight
-            )
+        try {
+            if (isSPlus()) {
+                val sizes = listOf(SizeF(widgetDpWidth.toFloat(), widgetDpHeight.toFloat()))
+                widgetView.updateAppWidgetSize(Bundle(), sizes)
+            } else {
+                widgetView.updateAppWidgetSize(
+                    Bundle(),
+                    widgetDpWidth,
+                    widgetDpHeight,
+                    widgetDpWidth,
+                    widgetDpHeight
+                )
+            }
+        } catch (e: Exception) {
+            // Sizing hints are best-effort on some OEM widget hosts — the widget
+            // still renders at the layout size set below even if this fails.
+            logKeeperHelper.log("HomeScreenGrid", "updateAppWidgetSize failed for widgetId=${item.widgetId}", e)
         }
 
         widgetView.layoutParams?.width = widgetWidth
