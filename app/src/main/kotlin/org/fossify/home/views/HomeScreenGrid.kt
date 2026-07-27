@@ -234,6 +234,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         binding = HomeScreenGridBinding.bind(this)
     }
 
+    @Suppress("TooGenericExceptionCaught")
     fun fetchGridItems() {
         ensureBackgroundThread {
             val providers = appWidgetManager.installedProviders
@@ -256,7 +257,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 } catch (e: Exception) {
                     // One malformed item (e.g. a corrupt folder) must not prevent
                     // the rest of the grid from loading.
-                    logKeeperHelper.log("HomeScreenGrid", "Drawable generation failed for item.id=${item.id}, type=${item.type}", e)
+                    logKeeperHelper.log(
+                        "HomeScreenGrid",
+                        "Drawable generation failed for item.id=${item.id}, type=${item.type}",
+                        e
+                    )
                 }
 
                 item.providerInfo =
@@ -576,6 +581,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         resizedWidget = null
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun moveItem() {
         val draggedHomeGridItem = gridItems.firstOrNull { it.id == draggedItem?.id }
         val center = gridCenters.minBy {
@@ -645,7 +651,11 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                                 }
                             }
                         } catch (e: Exception) {
-                            logKeeperHelper.log("HomeScreenGrid", "moveItem: updateItemPosition failed for id=$id", e)
+                            logKeeperHelper.log(
+                                "HomeScreenGrid",
+                                "moveItem: updateItemPosition failed for id=$id",
+                                e
+                            )
                         }
                     }
                 }
@@ -787,6 +797,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun addAppIconOrShortcut(
         draggedHomeGridItem: HomeScreenGridItem?,
         xIndex: Int,
@@ -1099,6 +1110,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         redrawGrid()
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun bindWidget(item: HomeScreenGridItem) {
         if (item.outOfBounds()) {
             return
@@ -1156,6 +1168,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun placeAppWidget(
         appWidgetProviderInfo: AppWidgetProviderInfo,
         item: HomeScreenGridItem,
@@ -1207,6 +1220,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
         (context as MainActivity).clearWidgetsSearch()
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun updateWidgetPositionAndSize(
         widgetView: AppWidgetHostView,
         item: HomeScreenGridItem,
