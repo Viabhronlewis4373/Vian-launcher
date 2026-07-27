@@ -27,12 +27,13 @@ import java.util.Date
 import java.util.Locale
 import java.util.regex.Pattern
 
+@Suppress("TooManyFunctions")
 class LogViewerActivity : SimpleActivity() {
     private val binding by viewBinding(ActivityLogViewerBinding::inflate)
     private lateinit var logKeeperHelper: LogKeeperHelper
 
     private var fullLogText = ""
-    private var selectedRangeHours = 24 // -1 means "All"
+    private var selectedRangeHours = DEFAULT_RANGE_HOURS // -1 means "All"
     private val rangePillViews = LinkedHashMap<Int, MyTextView>()
     private var pendingDownloadText: String? = null
 
@@ -77,12 +78,12 @@ class LogViewerActivity : SimpleActivity() {
 
     private fun setupTimeRangePills() {
         val ranges = listOf(
-            TimeRange(R.string.time_range_1h, 1),
-            TimeRange(R.string.time_range_6h, 6),
-            TimeRange(R.string.time_range_12h, 12),
-            TimeRange(R.string.time_range_24h, 24),
-            TimeRange(R.string.time_range_48h, 48),
-            TimeRange(R.string.time_range_all, -1)
+            TimeRange(R.string.time_range_1h, RANGE_1H),
+            TimeRange(R.string.time_range_6h, RANGE_6H),
+            TimeRange(R.string.time_range_12h, RANGE_12H),
+            TimeRange(R.string.time_range_24h, RANGE_24H),
+            TimeRange(R.string.time_range_48h, RANGE_48H),
+            TimeRange(R.string.time_range_all, RANGE_ALL)
         )
 
         val marginPx = resources.getDimensionPixelSize(org.fossify.commons.R.dimen.normal_margin)
@@ -92,7 +93,8 @@ class LogViewerActivity : SimpleActivity() {
         ranges.forEach { range ->
             val pill = MyTextView(this).apply {
                 text = getString(range.labelRes)
-                background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_pill)?.mutate()
+                background = androidx.core.content.ContextCompat
+                    .getDrawable(context, R.drawable.bg_pill)?.mutate()
                 setPadding(paddingHPx, paddingVPx, paddingHPx, paddingVPx)
                 gravity = Gravity.CENTER
                 isAllCaps = false
@@ -114,7 +116,7 @@ class LogViewerActivity : SimpleActivity() {
 
     private fun refreshPillSelection() {
         val selectedColor = getProperPrimaryColor()
-        val unselectedColor = getProperBackgroundColor().adjustAlpha(0.6f)
+        val unselectedColor = getProperBackgroundColor().adjustAlpha(UNSELECTED_PILL_ALPHA)
 
         rangePillViews.forEach { (hours, pill) ->
             val isSelected = hours == selectedRangeHours
@@ -123,8 +125,10 @@ class LogViewerActivity : SimpleActivity() {
     }
 
     private fun setupActionButtons() {
-        binding.logViewerCopy.background = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_pill)?.mutate()
-        binding.logViewerDownload.background = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_pill)?.mutate()
+        binding.logViewerCopy.background = androidx.core.content.ContextCompat
+            .getDrawable(this, R.drawable.bg_pill)?.mutate()
+        binding.logViewerDownload.background = androidx.core.content.ContextCompat
+            .getDrawable(this, R.drawable.bg_pill)?.mutate()
         binding.logViewerCopy.background?.setTint(getProperPrimaryColor())
         binding.logViewerDownload.background?.setTint(getProperPrimaryColor())
 
@@ -231,6 +235,7 @@ class LogViewerActivity : SimpleActivity() {
         startActivityForResult(intent, CREATE_LOG_FILE_REQUEST_CODE)
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
         if (requestCode == CREATE_LOG_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -262,5 +267,13 @@ class LogViewerActivity : SimpleActivity() {
 
     companion object {
         private const val CREATE_LOG_FILE_REQUEST_CODE = 91
+        private const val DEFAULT_RANGE_HOURS = 24
+        private const val RANGE_1H = 1
+        private const val RANGE_6H = 6
+        private const val RANGE_12H = 12
+        private const val RANGE_24H = 24
+        private const val RANGE_48H = 48
+        private const val RANGE_ALL = -1
+        private const val UNSELECTED_PILL_ALPHA = 0.6f
     }
 }
