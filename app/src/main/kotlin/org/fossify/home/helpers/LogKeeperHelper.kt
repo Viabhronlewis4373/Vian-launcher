@@ -35,6 +35,8 @@ class LogKeeperHelper(context: Context) {
             if (throwable != null) {
                 builder.append(throwable.stackTraceToString()).append('\n')
             }
+            builder.append("Recent actions leading up to this:\n")
+            builder.append(ActionTrail.snapshot()).append('\n')
             logFile.appendText(builder.toString())
         } catch (ignored: Exception) {
             // Logging must never itself crash the app.
