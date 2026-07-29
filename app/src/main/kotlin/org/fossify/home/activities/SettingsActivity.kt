@@ -217,6 +217,9 @@ class SettingsActivity : SimpleActivity() {
             RadioGroupDialog(this, items, currentRowCount) {
                 val newRowCount = it as Int
                 if (currentRowCount != newRowCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed home row count: $currentRowCount -> $newRowCount"
+                    )
                     config.homeRowCount = newRowCount
                     setupHomeRowCount()
                 }
@@ -243,6 +246,9 @@ class SettingsActivity : SimpleActivity() {
             RadioGroupDialog(this, items, currentColumnCount) {
                 val newColumnCount = it as Int
                 if (currentColumnCount != newColumnCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed home column count: $currentColumnCount -> $newColumnCount"
+                    )
                     config.homeColumnCount = newColumnCount
                     setupHomeColumnCount()
                 }
