@@ -703,10 +703,12 @@ class MainActivity : SimpleActivity(), FlingListener {
         mIgnoreMoveEvents = true
         val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
         if (clickedGridItem != null) {
+            org.fossify.home.helpers.ActionTrail.record("Long-pressed ${clickedGridItem.type}: ${clickedGridItem.title}")
             performItemLongClick(x, clickedGridItem)
             return
         }
 
+        org.fossify.home.helpers.ActionTrail.record("Long-pressed empty home screen area")
         binding.mainHolder.performHapticFeedback()
         showMainLongPressMenu(x, y)
     }
@@ -730,6 +732,7 @@ class MainActivity : SimpleActivity(), FlingListener {
             return
         }
 
+        org.fossify.home.helpers.ActionTrail.record("Double-tapped empty home screen area")
         val devicePolicyManager =
             getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val isLockDeviceAdminActive = devicePolicyManager.isAdminActive(
@@ -780,6 +783,9 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun performItemClick(clickedGridItem: HomeScreenGridItem) {
+        org.fossify.home.helpers.ActionTrail.record(
+            "Tapped ${clickedGridItem.type}: ${clickedGridItem.title} (packageName=${clickedGridItem.packageName})"
+        )
         when (clickedGridItem.type) {
             ITEM_TYPE_ICON -> launchApp(clickedGridItem.packageName, clickedGridItem.activityName)
             ITEM_TYPE_FOLDER -> openFolder(clickedGridItem)
@@ -904,6 +910,7 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun launchWallpapersIntent() {
+        org.fossify.home.helpers.ActionTrail.record("Opened wallpaper picker")
         try {
             Intent(Intent.ACTION_SET_WALLPAPER).apply {
                 startActivity(this)
@@ -916,6 +923,7 @@ class MainActivity : SimpleActivity(), FlingListener {
     }
 
     private fun launchSettings() {
+        org.fossify.home.helpers.ActionTrail.record("Opened Settings")
         startActivity(
             Intent(this@MainActivity, SettingsActivity::class.java)
         )
@@ -1041,6 +1049,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         }
 
         if (!isWidgetsFragmentExpanded()) {
+            org.fossify.home.helpers.ActionTrail.record("Swiped up (open app drawer)")
             mIgnoreUpEvent = true
             showFragment(binding.allAppsFragment)
         }
@@ -1052,6 +1061,7 @@ class MainActivity : SimpleActivity(), FlingListener {
             return
         }
 
+        org.fossify.home.helpers.ActionTrail.record("Swiped down")
         mIgnoreUpEvent = true
         if (isAllAppsFragmentExpanded()) {
             hideFragment(binding.allAppsFragment)
@@ -1073,6 +1083,7 @@ class MainActivity : SimpleActivity(), FlingListener {
             return
         }
 
+        org.fossify.home.helpers.ActionTrail.record("Swiped right (previous page)")
         mIgnoreUpEvent = true
         binding.homeScreenGrid.root.prevPage(redraw = true)
     }
@@ -1082,6 +1093,7 @@ class MainActivity : SimpleActivity(), FlingListener {
             return
         }
 
+        org.fossify.home.helpers.ActionTrail.record("Swiped left (next page)")
         mIgnoreUpEvent = true
         binding.homeScreenGrid.root.nextPage(redraw = true)
     }
