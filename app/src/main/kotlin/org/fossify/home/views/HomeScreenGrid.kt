@@ -300,6 +300,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun removeAppIcon(item: HomeScreenGridItem) {
+        org.fossify.home.helpers.ActionTrail.record("Removed icon from home screen: ${item.title}")
         ensureBackgroundThread {
             removeItemFromHomeScreen(item)
             post {
@@ -317,6 +318,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun removeWidget(item: HomeScreenGridItem) {
+        org.fossify.home.helpers.ActionTrail.record("Removed widget from home screen: widgetId=${item.widgetId}")
         ensureBackgroundThread {
             removeItemFromHomeScreen(item)
             post {
@@ -363,6 +365,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun itemDraggingStarted(draggedGridItem: HomeScreenGridItem) {
+        org.fossify.home.helpers.ActionTrail.record(
+            "Started dragging ${draggedGridItem.type}: ${draggedGridItem.title}"
+        )
         draggedItem = draggedGridItem
 
         if (draggedGridItem.type == ITEM_TYPE_WIDGET) {
@@ -481,6 +486,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     @SuppressLint("ClickableViewAccessibility")
     fun widgetLongPressed(item: HomeScreenGridItem) {
+        org.fossify.home.helpers.ActionTrail.record("Started resizing widget: widgetId=${item.widgetId}")
         resizedWidget = item
         redrawGrid()
 
@@ -1900,6 +1906,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     fun openFolder(folder: HomeScreenGridItem) {
         if (currentlyOpenFolder == null) {
+            org.fossify.home.helpers.ActionTrail.record("Opened folder: ${folder.title}")
             currentlyOpenFolder = folder.toFolder(animateOpening = true)
             redrawGrid()
         } else if (currentlyOpenFolder?.item?.id != folder.id) {
@@ -1909,6 +1916,9 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun closeFolder(redraw: Boolean = false) {
+        if (currentlyOpenFolder != null) {
+            org.fossify.home.helpers.ActionTrail.record("Closed folder: ${currentlyOpenFolder?.item?.title}")
+        }
         currentlyOpenFolder?.animateClosing {
             currentlyOpenFolder = null
             if (redraw) {
