@@ -54,6 +54,7 @@ class SettingsActivity : SimpleActivity() {
         setupShowDrawerAppLabels()
         setupHomeRowCount()
         setupHomeColumnCount()
+        setupDockIconCount()
         setupShowHomeAppLabels()
         setupLanguage()
         setupManageHiddenIcons()
@@ -251,6 +252,32 @@ class SettingsActivity : SimpleActivity() {
                     )
                     config.homeColumnCount = newColumnCount
                     setupHomeColumnCount()
+                    // dock icon count is capped by homeColumnCount, refresh its
+                    // displayed value in case the new column count clamped it down
+                    setupDockIconCount()
+                }
+            }
+        }
+    }
+
+    private fun setupDockIconCount() {
+        val maxDockIconCount = config.homeColumnCount
+        val currentDockIconCount = config.dockIconCount
+        binding.settingsDockIconCount.text = currentDockIconCount.toString()
+        binding.settingsDockIconCountHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (i in org.fossify.home.helpers.MIN_DOCK_ICON_COUNT..maxDockIconCount) {
+                items.add(RadioItem(id = i, title = i.toString()))
+            }
+
+            RadioGroupDialog(this, items, currentDockIconCount) {
+                val newDockIconCount = it as Int
+                if (currentDockIconCount != newDockIconCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed dock icon count: $currentDockIconCount -> $newDockIconCount"
+                    )
+                    config.dockIconCount = newDockIconCount
+                    setupDockIconCount()
                 }
             }
         }
