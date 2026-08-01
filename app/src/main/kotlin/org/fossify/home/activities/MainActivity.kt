@@ -77,6 +77,8 @@ import org.fossify.home.extensions.isDefaultLauncher
 import org.fossify.home.extensions.launchApp
 import org.fossify.home.extensions.launchAppInfo
 import org.fossify.home.extensions.launchersDB
+import org.fossify.home.extensions.readableName
+import org.fossify.home.extensions.readableType
 import org.fossify.home.extensions.roleManager
 import org.fossify.home.extensions.supportsDarkText
 import org.fossify.home.extensions.uninstallApp
@@ -703,7 +705,7 @@ class MainActivity : SimpleActivity(), FlingListener {
         mIgnoreMoveEvents = true
         val clickedGridItem = binding.homeScreenGrid.root.isClickingGridItem(x.toInt(), y.toInt())
         if (clickedGridItem != null) {
-            org.fossify.home.helpers.ActionTrail.record("Long-pressed ${clickedGridItem.type}: ${clickedGridItem.title}")
+            org.fossify.home.helpers.ActionTrail.record("Long-pressed ${clickedGridItem.readableType()}: ${clickedGridItem.readableName()}")
             performItemLongClick(x, clickedGridItem)
             return
         }
@@ -784,7 +786,7 @@ class MainActivity : SimpleActivity(), FlingListener {
 
     private fun performItemClick(clickedGridItem: HomeScreenGridItem) {
         org.fossify.home.helpers.ActionTrail.record(
-            "Tapped ${clickedGridItem.type}: ${clickedGridItem.title} (packageName=${clickedGridItem.packageName})"
+            "Tapped ${clickedGridItem.readableType()}: ${clickedGridItem.readableName()}"
         )
         when (clickedGridItem.type) {
             ITEM_TYPE_ICON -> launchApp(clickedGridItem.packageName, clickedGridItem.activityName)
