@@ -59,6 +59,8 @@ import org.fossify.home.databinding.HomeScreenGridBinding
 import org.fossify.home.extensions.config
 import org.fossify.home.extensions.getDrawableForPackageName
 import org.fossify.home.extensions.homeScreenGridItemsDB
+import org.fossify.home.extensions.readableName
+import org.fossify.home.extensions.readableType
 import org.fossify.home.helpers.ITEM_TYPE_FOLDER
 import org.fossify.home.helpers.ITEM_TYPE_ICON
 import org.fossify.home.helpers.ITEM_TYPE_SHORTCUT
@@ -300,7 +302,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     }
 
     fun removeAppIcon(item: HomeScreenGridItem) {
-        org.fossify.home.helpers.ActionTrail.record("Removed icon from home screen: ${item.title}")
+        org.fossify.home.helpers.ActionTrail.record("Removed icon from home screen: ${item.readableName()}")
         ensureBackgroundThread {
             removeItemFromHomeScreen(item)
             post {
@@ -366,7 +368,7 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
 
     fun itemDraggingStarted(draggedGridItem: HomeScreenGridItem) {
         org.fossify.home.helpers.ActionTrail.record(
-            "Started dragging ${draggedGridItem.type}: ${draggedGridItem.title}"
+            "Started dragging ${draggedGridItem.readableType()}: ${draggedGridItem.readableName()}"
         )
         draggedItem = draggedGridItem
 
@@ -606,6 +608,10 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
             // No moving folder into the dock
             if (draggedHomeGridItem?.type == ITEM_TYPE_FOLDER && yIndex == rowCount - 1) {
                 isDroppingPositionValid = false
+            } else if (yIndex == rowCount - 1 && !isWithinDockIconRange(xIndex)) {
+                // outside the dock's configured icon count (dockIconCount can be
+                // smaller than columnCount, centered within the row)
+                isDroppingPositionValid = false
             } else {
                 gridItems.filterVisibleOnCurrentPageOnly().forEach { item ->
                     for (xCell in item.left..item.right) {
@@ -716,32 +722,34 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
                 yIndex = gridCells.y
 
                 // check if the destination cell is empty or a folder
-                isDroppingPositionValid = true
+                isDroppingPositionValid = !(yIndex == rowCount - 1 && !isWithinDockIconRange(xIndex))
                 val wantedCell = Pair(xIndex, yIndex)
-                gridItems.filterVisibleOnCurrentPageOnly().filter { it.id != draggedItem?.id }
-                    .forEach { item ->
-                        for (xCell in item.left..item.right) {
-                            for (
-                            yCell in item.getDockAdjustedTop(rowCount)
-                                .rangeTo(item.getDockAdjustedBottom(rowCount))
-                            ) {
-                                val cell = Pair(xCell, yCell)
-                                val isAnyCellOccupied = wantedCell == cell
-                                if (isAnyCellOccupied) {
-                                    if (item.type != ITEM_TYPE_WIDGET && !item.docked) {
-                                        potentialParent = item
-                                    } else {
-                                        if (item.type == ITEM_TYPE_WIDGET && item.outOfBounds()) {
-                                            removeWidget(item)
+                if (isDroppingPositionValid) {
+                    gridItems.filterVisibleOnCurrentPageOnly().filter { it.id != draggedItem?.id }
+                        .forEach { item ->
+                            for (xCell in item.left..item.right) {
+                                for (
+                                yCell in item.getDockAdjustedTop(rowCount)
+                                    .rangeTo(item.getDockAdjustedBottom(rowCount))
+                                ) {
+                                    val cell = Pair(xCell, yCell)
+                                    val isAnyCellOccupied = wantedCell == cell
+                                    if (isAnyCellOccupied) {
+                                        if (item.type != ITEM_TYPE_WIDGET && !item.docked) {
+                                            potentialParent = item
                                         } else {
-                                            isDroppingPositionValid = false
+                                            if (item.type == ITEM_TYPE_WIDGET && item.outOfBounds()) {
+                                                removeWidget(item)
+                                            } else {
+                                                isDroppingPositionValid = false
+                                            }
                                         }
+                                        return@forEach
                                     }
-                                    return@forEach
                                 }
                             }
                         }
-                    }
+                }
             }
         }
 
@@ -1277,6 +1285,18 @@ class HomeScreenGrid(context: Context, attrs: AttributeSet, defStyle: Int) :
     // convert stuff like 102x192 to grid cells like 0x1
     private fun getClosestGridCells(center: Point): Point? {
         return cells.entries.firstOrNull { (_, cell) -> center.x == cell.centerX() && center.y == cell.centerY() }?.key
+    }
+
+    /**
+     * The dock row reuses the same cell grid as the rest of the home screen,
+     * just possibly with fewer usable slots (context.config.dockIconCount),
+     * centered within the full column range. Returns whether xIndex falls
+     * within that centered, allowed range.
+     */
+    private fun isWithinDockIconRange(xIndex: Int): Boolean {
+        val dockIconCount = context.config.dockIconCount
+        val offset = (columnCount - dockIconCount) / 2
+        return xIndex in offset until (offset + dockIconCount)
     }
 
     private fun redrawGrid() {
