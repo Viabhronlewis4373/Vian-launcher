@@ -4,6 +4,7 @@ const val WIDGET_LIST_SECTION = 0
 const val WIDGET_LIST_ITEMS_HOLDER = 1
 
 const val REPOSITORY_NAME = "Launcher"
+const val PLAY_STORE_PACKAGE = "com.android.vending"
 
 // shared prefs
 const val WAS_HOME_SCREEN_INIT = "was_home_screen_init"
