@@ -7,7 +7,8 @@ import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.applyColorFilter
+import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
@@ -19,6 +20,7 @@ import org.fossify.home.adapters.LaunchersAdapter
 import org.fossify.home.databinding.AllAppsFragmentBinding
 import org.fossify.home.extensions.config
 import org.fossify.home.extensions.launchApp
+import org.fossify.home.extensions.launchPlayStore
 import org.fossify.home.extensions.setupDrawerBackground
 import org.fossify.home.helpers.ITEM_TYPE_ICON
 import org.fossify.home.interfaces.AllAppsListener
@@ -194,7 +196,7 @@ class AllAppsFragment(
         getAdapter()?.updateTextColor(context.getProperTextColor())
 
         binding.searchBar.beVisibleIf(context.config.showSearchBar)
-        binding.searchBar.requireToolbar().beGone()
+        setupDrawerTopBarMenu()
         binding.searchBar.updateColors()
         binding.searchBar.setupMenu()
 
@@ -267,6 +269,40 @@ class AllAppsFragment(
 
         getAdapter()?.submitList(filtered) {
             showNoResultsPlaceholderIfNeeded()
+        }
+    }
+
+    private fun setupDrawerTopBarMenu() {
+        val toolbar = binding.searchBar.requireToolbar()
+        toolbar.beVisible()
+        toolbar.menu.clear()
+        toolbar.inflateMenu(org.fossify.home.R.menu.menu_app_drawer)
+
+        val contrastColor = context.getProperTextColor()
+        toolbar.overflowIcon?.applyColorFilter(contrastColor)
+        for (i in 0 until toolbar.menu.size()) {
+            toolbar.menu.getItem(i).icon?.applyColorFilter(contrastColor)
+        }
+
+        toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                org.fossify.home.R.id.play_store -> {
+                    (activity as? MainActivity)?.launchPlayStore()
+                    true
+                }
+
+                org.fossify.home.R.id.hidden_apps -> {
+                    activity?.startActivity(
+                        android.content.Intent(
+                            activity,
+                            org.fossify.home.activities.HiddenIconsActivity::class.java
+                        )
+                    )
+                    true
+                }
+
+                else -> false
+            }
         }
     }
 }
