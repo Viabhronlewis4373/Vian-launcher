@@ -278,11 +278,17 @@ class AllAppsFragment(
         toolbar.menu.clear()
         toolbar.inflateMenu(org.fossify.home.R.menu.menu_app_drawer)
 
+        // Only tint the overflow (3-dot) icon to match the theme — menu item
+        // icons like Play Store's should keep their own brand colors.
         val contrastColor = context.getProperTextColor()
         toolbar.overflowIcon?.applyColorFilter(contrastColor)
-        for (i in 0 until toolbar.menu.size()) {
-            toolbar.menu.getItem(i).icon?.applyColorFilter(contrastColor)
-        }
+
+        // inflateMenu() can change the toolbar's measured width after the
+        // parent layout has already run once, without automatically forcing
+        // the sibling search EditText (which ends where the toolbar begins)
+        // to re-measure. Force it explicitly so the field actually shrinks
+        // instead of the toolbar icons rendering on top of it.
+        binding.searchBar.binding.toolbarContainer.requestLayout()
 
         toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
