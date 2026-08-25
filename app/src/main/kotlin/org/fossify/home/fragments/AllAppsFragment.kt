@@ -274,6 +274,7 @@ class AllAppsFragment(
 
     private fun setupDrawerTopBarMenu() {
         val toolbar = binding.searchBar.requireToolbar()
+        val searchField = binding.searchBar.binding.topToolbarSearch
         toolbar.beVisible()
         toolbar.menu.clear()
         toolbar.inflateMenu(org.fossify.home.R.menu.menu_app_drawer)
@@ -283,12 +284,32 @@ class AllAppsFragment(
         val contrastColor = context.getProperTextColor()
         toolbar.overflowIcon?.applyColorFilter(contrastColor)
 
-        // inflateMenu() can change the toolbar's measured width after the
-        // parent layout has already run once, without automatically forcing
-        // the sibling search EditText (which ends where the toolbar begins)
-        // to re-measure. Force it explicitly so the field actually shrinks
-        // instead of the toolbar icons rendering on top of it.
-        binding.searchBar.binding.toolbarContainer.requestLayout()
+        // The search field's "toStartOf the toolbar" constraint doesn't
+        // reliably re-measure when inflateMenu() changes the toolbar's width
+        // after the first layout pass, so instead of relying on that sibling
+        // constraint, explicitly reserve room for the toolbar via a margin
+        // on the search field itself, and toggle it off/on together with
+        // showing/hiding the toolbar on search open/close.
+        val reservedWidthPx =
+            resources.getDimensionPixelSize(org.fossify.home.R.dimen.drawer_toolbar_reserved_width)
+
+        fun setSearchFieldEndMargin(marginPx: Int) {
+            (searchField.layoutParams as? android.widget.RelativeLayout.LayoutParams)?.apply {
+                marginEnd = marginPx
+            }
+            searchField.requestLayout()
+        }
+
+        setSearchFieldEndMargin(reservedWidthPx)
+
+        binding.searchBar.onSearchOpenListener = {
+            toolbar.beGone()
+            setSearchFieldEndMargin(0)
+        }
+        binding.searchBar.onSearchClosedListener = {
+            toolbar.beVisible()
+            setSearchFieldEndMargin(reservedWidthPx)
+        }
 
         toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
