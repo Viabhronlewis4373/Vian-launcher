@@ -15,11 +15,7 @@ import java.util.Locale
 
 /**
  * Self-contained clock widget. Deliberately isolated from HomeScreenGrid's
- * WorkspaceItem/grid-cell system — it's a fixed overlay on the home screen,
- * not a draggable/resizable grid item, so it doesn't touch any of the
- * drag-drop/rendering logic there. Manages its own tick-update lifecycle via
- * onAttachedToWindow/onDetachedFromWindow, so nothing needs to be wired into
- * MainActivity's onResume/onPause.
+ * drag-drop system — it's a fixed overlay, not a grid item.
  */
 class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     private lateinit var binding: ClockWidgetBinding
@@ -52,7 +48,11 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
                 addAction(Intent.ACTION_TIMEZONE_CHANGED)
                 addAction(Intent.ACTION_DATE_CHANGED)
             }
-            context.registerReceiver(tickReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            // Use flags=0 (not RECEIVER_NOT_EXPORTED) — system broadcasts like
+            // ACTION_TIME_TICK are sent by Android itself, not by third-party apps,
+            // so RECEIVER_NOT_EXPORTED incorrectly blocks them.
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            context.registerReceiver(tickReceiver, filter)
         } catch (e: Exception) {
             logKeeperHelper.log("ClockWidgetView", "Failed to register time tick receiver", e)
         }
@@ -75,11 +75,30 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
     }
 
     private fun launchClockApp() {
-        try {
-            val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            logKeeperHelper.log("ClockWidgetView", "Failed to launch clock app", e)
+        // Try ACTION_SHOW_ALARMS first (standard). Add FLAG_ACTIVITY_NEW_TASK
+        // since we're starting from a View context on MIUI which otherwise blocks it.
+        // Fall back to a direct clock app package launch if that fails.
+        val attempts = listOf(
+            Intent(AlarmClock.ACTION_SHOW_ALARMS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            Intent(AlarmClock.ACTION_SET_ALARM)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            context.packageManager.getLaunchIntentForPackage("com.android.deskclock")
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            context.packageManager.getLaunchIntentForPackage("com.miui.clock")
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+
+        for (intent in attempts) {
+            if (intent == null) continue
+            try {
+                context.startActivity(intent)
+                return
+            } catch (ignored: Exception) {
+                // Try next
+            }
         }
+
+        logKeeperHelper.log("ClockWidgetView", "All clock launch attempts failed", null)
     }
 }
