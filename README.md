@@ -1,3 +1,4 @@
+
 # Fossify Launcher
 
 <img alt="Logo" src="graphics/icon.webp" width="120" />
