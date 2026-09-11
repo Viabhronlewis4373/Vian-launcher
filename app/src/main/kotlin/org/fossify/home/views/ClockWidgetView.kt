@@ -16,6 +16,7 @@ import java.util.Locale
 /**
  * Self-contained clock widget. Deliberately isolated from HomeScreenGrid's
  * drag-drop system — it's a fixed overlay, not a grid item.
+ * Trigger build: 2026-09-12
  */
 class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     private lateinit var binding: ClockWidgetBinding
@@ -48,9 +49,6 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
                 addAction(Intent.ACTION_TIMEZONE_CHANGED)
                 addAction(Intent.ACTION_DATE_CHANGED)
             }
-            // Use flags=0 (not RECEIVER_NOT_EXPORTED) — system broadcasts like
-            // ACTION_TIME_TICK are sent by Android itself, not by third-party apps,
-            // so RECEIVER_NOT_EXPORTED incorrectly blocks them.
             @Suppress("UnspecifiedRegisterReceiverFlag")
             context.registerReceiver(tickReceiver, filter)
         } catch (e: Exception) {
@@ -63,7 +61,6 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         try {
             context.unregisterReceiver(tickReceiver)
         } catch (ignored: Exception) {
-            // Receiver may already be unregistered — not an error worth logging.
         }
     }
 
@@ -75,9 +72,6 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
     }
 
     private fun launchClockApp() {
-        // Try ACTION_SHOW_ALARMS first (standard). Add FLAG_ACTIVITY_NEW_TASK
-        // since we're starting from a View context on MIUI which otherwise blocks it.
-        // Fall back to a direct clock app package launch if that fails.
         val attempts = listOf(
             Intent(AlarmClock.ACTION_SHOW_ALARMS)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
@@ -95,7 +89,6 @@ class ClockWidgetView(context: Context, attrs: AttributeSet) : LinearLayout(cont
                 context.startActivity(intent)
                 return
             } catch (ignored: Exception) {
-                // Try next
             }
         }
 
