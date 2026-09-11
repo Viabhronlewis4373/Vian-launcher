@@ -26,6 +26,7 @@ import org.fossify.commons.extensions.getPopupMenuTheme
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.isDynamicTheme
 import org.fossify.commons.extensions.showErrorToast
+import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.isQPlus
 import org.fossify.commons.helpers.isSPlus
 import org.fossify.home.R
@@ -33,6 +34,7 @@ import org.fossify.home.activities.SettingsActivity
 import org.fossify.home.helpers.ITEM_TYPE_FOLDER
 import org.fossify.home.helpers.ITEM_TYPE_ICON
 import org.fossify.home.helpers.ITEM_TYPE_WIDGET
+import org.fossify.home.helpers.PLAY_STORE_PACKAGE
 import org.fossify.home.helpers.UNINSTALL_APP_REQUEST_CODE
 import org.fossify.home.interfaces.ItemMenuListener
 import org.fossify.home.models.HomeScreenGridItem
@@ -53,6 +55,19 @@ fun Activity.launchApp(packageName: String, activityName: String) {
         } catch (e: Exception) {
             showErrorToast(e)
         }
+    }
+}
+
+fun Activity.launchPlayStore() {
+    try {
+        val launchIntent = packageManager.getLaunchIntentForPackage(PLAY_STORE_PACKAGE)
+        if (launchIntent != null) {
+            startActivity(launchIntent)
+        } else {
+            toast(org.fossify.commons.R.string.no_app_found)
+        }
+    } catch (e: Exception) {
+        showErrorToast(e)
     }
 }
 

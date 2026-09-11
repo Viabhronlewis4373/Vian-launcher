@@ -15,7 +15,6 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/color_primary"
-            app:menu="@menu/menu_log_viewer"
             app:title="@string/app_logs"
             app:titleTextAppearance="@style/AppTheme.ActionBar.TitleTextStyle" />
 
@@ -28,31 +27,124 @@
         android:clipToPadding="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <org.fossify.commons.views.MyTextView
-                android:id="@+id/log_viewer_text"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:padding="@dimen/activity_margin"
-                android:textIsSelectable="true"
-                android:textSize="12sp"
-                android:visibility="gone" />
-
-            <org.fossify.commons.views.MyTextView
-                android:id="@+id/log_viewer_placeholder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:paddingLeft="@dimen/big_margin"
+                android:paddingStart="@dimen/activity_margin"
                 android:paddingTop="@dimen/activity_margin"
-                android:paddingRight="@dimen/big_margin"
-                android:text="@string/no_logs_yet"
+                android:paddingEnd="@dimen/activity_margin">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/log_viewer_master_switch_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="@string/log_keeper_master_switch"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/log_viewer_master_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true" />
+
+            </RelativeLayout>
+
+            <org.fossify.commons.views.MyTextView
+                android:id="@+id/log_viewer_disabled_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/activity_margin"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginEnd="@dimen/activity_margin"
+                android:textSize="13sp"
                 android:visibility="gone" />
 
-        </RelativeLayout>
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_margin"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingEnd="@dimen/activity_margin"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/log_viewer_time_range_holder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_margin"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingEnd="@dimen/activity_margin">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/log_viewer_copy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill"
+                    android:paddingStart="@dimen/big_margin"
+                    android:paddingTop="@dimen/normal_margin"
+                    android:paddingEnd="@dimen/big_margin"
+                    android:paddingBottom="@dimen/normal_margin"
+                    android:text="@string/copy"
+                    android:textStyle="bold" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/log_viewer_download"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/activity_margin"
+                    android:background="@drawable/bg_pill"
+                    android:paddingStart="@dimen/big_margin"
+                    android:paddingTop="@dimen/normal_margin"
+                    android:paddingEnd="@dimen/big_margin"
+                    android:paddingBottom="@dimen/normal_margin"
+                    android:text="@string/download"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/activity_margin">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/log_viewer_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:padding="@dimen/activity_margin"
+                    android:textIsSelectable="true"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/log_viewer_placeholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:paddingLeft="@dimen/big_margin"
+                    android:paddingTop="@dimen/activity_margin"
+                    android:paddingRight="@dimen/big_margin"
+                    android:text="@string/no_logs_yet"
+                    android:visibility="gone" />
+
+            </RelativeLayout>
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

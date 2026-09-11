@@ -12,4 +12,9 @@
     <dimen name="min_folder_view_height">200dp</dimen>
     <dimen name="max_folder_view_height">500dp</dimen>
     <dimen name="menu_icon_size">24dp</dimen>
+    <dimen name="drawer_toolbar_reserved_width">104dp</dimen>
+    <dimen name="clock_time_text_size">56sp</dimen>
+    <dimen name="clock_ampm_text_size">16sp</dimen>
+    <dimen name="clock_date_text_size">16sp</dimen>
+    <dimen name="clock_widget_top_margin">24dp</dimen>
 </resources>

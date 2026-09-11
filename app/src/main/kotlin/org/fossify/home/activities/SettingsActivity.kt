@@ -54,6 +54,7 @@ class SettingsActivity : SimpleActivity() {
         setupShowDrawerAppLabels()
         setupHomeRowCount()
         setupHomeColumnCount()
+        setupDockIconCount()
         setupShowHomeAppLabels()
         setupLanguage()
         setupManageHiddenIcons()
@@ -217,6 +218,9 @@ class SettingsActivity : SimpleActivity() {
             RadioGroupDialog(this, items, currentRowCount) {
                 val newRowCount = it as Int
                 if (currentRowCount != newRowCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed home row count: $currentRowCount -> $newRowCount"
+                    )
                     config.homeRowCount = newRowCount
                     setupHomeRowCount()
                 }
@@ -243,8 +247,37 @@ class SettingsActivity : SimpleActivity() {
             RadioGroupDialog(this, items, currentColumnCount) {
                 val newColumnCount = it as Int
                 if (currentColumnCount != newColumnCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed home column count: $currentColumnCount -> $newColumnCount"
+                    )
                     config.homeColumnCount = newColumnCount
                     setupHomeColumnCount()
+                    // dock icon count is capped by homeColumnCount, refresh its
+                    // displayed value in case the new column count clamped it down
+                    setupDockIconCount()
+                }
+            }
+        }
+    }
+
+    private fun setupDockIconCount() {
+        val maxDockIconCount = config.homeColumnCount
+        val currentDockIconCount = config.dockIconCount
+        binding.settingsDockIconCount.text = currentDockIconCount.toString()
+        binding.settingsDockIconCountHolder.setOnClickListener {
+            val items = ArrayList<RadioItem>()
+            for (i in org.fossify.home.helpers.MIN_DOCK_ICON_COUNT..maxDockIconCount) {
+                items.add(RadioItem(id = i, title = i.toString()))
+            }
+
+            RadioGroupDialog(this, items, currentDockIconCount) {
+                val newDockIconCount = it as Int
+                if (currentDockIconCount != newDockIconCount) {
+                    org.fossify.home.helpers.ActionTrail.record(
+                        "Changed dock icon count: $currentDockIconCount -> $newDockIconCount"
+                    )
+                    config.dockIconCount = newDockIconCount
+                    setupDockIconCount()
                 }
             }
         }
@@ -277,7 +310,16 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsViewAppLogsHolder.setOnClickListener {
             startActivity(Intent(this, LogViewerActivity::class.java))
         }
+        // Long press triggers a deliberate test crash, so the crash-logging
+        // pipeline can be verified without waiting for a real bug. Debug/testing
+        // aid only — safe to remove once the log keeper is trusted.
+        binding.settingsViewAppLogsHolder.setOnLongClickListener {
+            throw TestCrashException("Test crash triggered from Settings (long press on View app logs)")
+        }
     }
+
+    /** Thrown only by the deliberate test-crash trigger above, to exercise the log keeper's crash handler on demand. */
+    private class TestCrashException(message: String) : Exception(message)
 
     private fun launchAbout() {
         val licenses = 0L

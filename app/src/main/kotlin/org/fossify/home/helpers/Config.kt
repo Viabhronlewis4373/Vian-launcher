@@ -45,4 +45,18 @@ class Config(context: Context) : BaseConfig(context) {
     var showHomeAppLabels: Boolean
         get() = prefs.getBoolean(SHOW_HOME_APP_LABELS, true)
         set(showHomeAppLabels) = prefs.edit().putBoolean(SHOW_HOME_APP_LABELS, showHomeAppLabels).apply()
+
+    var logKeeperEnabled: Boolean
+        get() = prefs.getBoolean(LOG_KEEPER_ENABLED, true)
+        set(logKeeperEnabled) = prefs.edit().putBoolean(LOG_KEEPER_ENABLED, logKeeperEnabled).apply()
+
+    // Dock icon count is independent of homeColumnCount, but can never exceed it —
+    // clamped on read so a later reduction in homeColumnCount can't leave a stale,
+    // too-large dock value in prefs.
+    var dockIconCount: Int
+        get() = minOf(
+            prefs.getInt(DOCK_ICON_COUNT, DEFAULT_DOCK_ICON_COUNT),
+            homeColumnCount
+        )
+        set(dockIconCount) = prefs.edit().putInt(DOCK_ICON_COUNT, dockIconCount).apply()
 }

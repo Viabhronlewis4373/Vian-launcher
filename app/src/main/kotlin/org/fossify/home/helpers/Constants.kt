@@ -4,6 +4,7 @@ const val WIDGET_LIST_SECTION = 0
 const val WIDGET_LIST_ITEMS_HOLDER = 1
 
 const val REPOSITORY_NAME = "Launcher"
+const val PLAY_STORE_PACKAGE = "com.android.vending"
 
 // shared prefs
 const val WAS_HOME_SCREEN_INIT = "was_home_screen_init"
@@ -15,6 +16,8 @@ const val CLOSE_APP_DRAWER = "close_app_drawer"
 const val AUTO_SHOW_KEYBOARD_IN_APP_DRAWER = "auto_show_keyboard_in_app_drawer"
 const val SHOW_DRAWER_APP_LABELS = "show_drawer_app_labels"
 const val SHOW_HOME_APP_LABELS = "show_home_app_labels"
+const val LOG_KEEPER_ENABLED = "log_keeper_enabled"
+const val DOCK_ICON_COUNT = "dock_icon_count"
 
 // default home screen grid size
 const val ROW_COUNT = 6
@@ -23,6 +26,11 @@ const val MIN_ROW_COUNT = 2
 const val MAX_ROW_COUNT = 15
 const val MIN_COLUMN_COUNT = 2
 const val MAX_COLUMN_COUNT = 15
+
+// dock icon count is independent of home grid column count, but cannot exceed it
+// (dock cells reuse the same grid columns, just possibly fewer of them, centered)
+const val DEFAULT_DOCK_ICON_COUNT = 5
+const val MIN_DOCK_ICON_COUNT = 1
 
 const val UNINSTALL_APP_REQUEST_CODE = 50
 const val REQUEST_CONFIGURE_WIDGET = 51

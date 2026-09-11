@@ -78,7 +78,14 @@ class HiddenIconsActivity : SimpleActivity(), RefreshRecyclerViewListener {
             }
 
             runOnUiThread {
-                HiddenIconsAdapter(this, hiddenIcons, this, binding.manageHiddenIconsList) {
+                HiddenIconsAdapter(this, hiddenIcons, this, binding.manageHiddenIconsList) { clickedItem ->
+                    val hiddenIcon = clickedItem as? HiddenIcon ?: return@HiddenIconsAdapter
+                    ensureBackgroundThread {
+                        hiddenIconsDB.removeHiddenIcons(listOf(hiddenIcon))
+                        runOnUiThread {
+                            refreshItems()
+                        }
+                    }
                 }.apply {
                     binding.manageHiddenIconsList.adapter = this
                 }
